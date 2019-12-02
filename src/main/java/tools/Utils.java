@@ -1,12 +1,16 @@
+package tools;
+
+import com.beust.jcommander.JCommander;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.digest.HmacUtils;
 
 import java.io.*;
 import java.net.URLEncoder;
 import java.util.Map;
+import java.util.Properties;
 import java.util.TreeMap;
 
-public class Utils {
+public interface Utils {
 
     static String toURLFriendly(String s){
         try {
@@ -53,5 +57,42 @@ public class Utils {
 
             return key.toString();
         }
+    }
+
+    static String updateIfSetsToDefault(Properties pro, String key, String value, String DEFAULT) {
+        if (!value.equalsIgnoreCase(DEFAULT))
+            return value;
+
+        return pro.getProperty(key, DEFAULT);
+    }
+
+    static MainArgs processArgs(String[] argv) {
+        MainArgs args = new MainArgs();
+
+        JCommander.newBuilder()
+                .addObject(args)
+                .build()
+                .parse(argv);
+
+        Properties pro = readConfigFile(args.configPath);
+        args.updateDefaultsWith(pro);
+
+        return args;
+    }
+
+    static Properties readConfigFile(String configPath) {
+        Properties pro = new Properties();
+
+        try {
+//            log.info(() -> String.format("Read program properties from %s.", configPath));
+            pro.load(new FileInputStream(configPath));
+        } catch (FileNotFoundException e) {
+//            log.warn(() -> configPath + " file missed, continued with default properties.");
+        } catch (IOException e) {
+//            log.error(() -> "Can't read " + configPath);
+            throw new RuntimeException(e);
+        }
+
+        return pro;
     }
 }
