@@ -1,26 +1,27 @@
 import java.io.*;
+import java.net.*;
+import java.util.*;
 
-import com.jcabi.ssh.Shell;
-import com.jcabi.ssh.Ssh;
 
 public class Main {
-    private static String readPrivateKey() throws IOException {
-        File file = new File("./keys/id_rsa");
+    private static String baseURL = "http://5.79.101.208:8080/client/api?";
+    private static String key = "_JueniXTpOxRfIgWlAWryF78JGTTx8hXQjJM60FKf2JlTtdmha6WeAW805yT9YkqRMU7UUVVtv8-em90ucjTVw";
+    private static String apiKey = "dy7DFSaC3TG4Qz7ZAYM2QCgH0KQuoPuy5tpY2RS7_OGVo5VkuvOBEv4fJtYGbQ61S99E9B57uO-pq8-9CbPQdg";
 
-        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-            String st;
-            StringBuilder key = new StringBuilder();
+    public static void main(String[] args) throws IOException, URISyntaxException {
+//        Shell shell = new Ssh("kashipazha.ir", 22, "asa", readPrivateKey());
+//        String stdout = new Shell.Plain(shell).exec("echo 'Hello, world!'");
+//        System.out.println(stdout);
 
-            while ((st = br.readLine()) != null)
-                key.append(st).append("\n");
+        Map<String, String> commands = new LinkedHashMap<>();
 
-            return key.toString();
-        }
-    }
+        commands.put("command", "listHosts");
+//        commands.put("command","listHypervisors");
+        commands.put("apiKey", apiKey);
+        commands.put("signature", Utils.calculateSignature(key,commands));
 
-    public static void main(String[] args) throws IOException {
-        Shell shell = new Ssh("kashipazha.ir", 22, "asa", readPrivateKey());
-        String stdout = new Shell.Plain(shell).exec("echo 'Hello, world!'");
-        System.out.println(stdout);
+//        System.out.println(urlFriendlyOf(baseURL + toParametersString(commands) + "&signature=" + signature));
+        String url = baseURL + Utils.toParametersString(commands);
+        System.out.println(url);
     }
 }
