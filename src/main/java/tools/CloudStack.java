@@ -2,6 +2,7 @@ package tools;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.digest.HmacUtils;
+import org.w3c.dom.Element;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -10,14 +11,16 @@ import java.util.Map;
 import java.util.TreeMap;
 
 public class CloudStack {
-    private final String API_KEY ;
-    private final String BASE_URL;
-    private final String KEY;
+    private final String apiKey;
+    private final String baseURL;
+    private final String key;
+    private final Requests requests;
 
-    public CloudStack(String baseURL, String key, String apiKey){
-        this.BASE_URL = baseURL;
-        this.KEY = key;
-        this.API_KEY = apiKey;
+    public CloudStack(String baseURL, String key, String apiKey) {
+        this.baseURL = baseURL;
+        this.key = key;
+        this.apiKey = apiKey;
+        this.requests = new Requests();
     }
 
     public static String calculateSignature(String key, Map<String, String> commands){
@@ -57,11 +60,11 @@ public class CloudStack {
         Map<String, String> urlParameters = new LinkedHashMap<>(command);
 
 //        commands.put("id", "f4dd2c32-ad2d-4f70-9b2d-753c37ff3c45");
-        urlParameters.put("apiKey", API_KEY);
+        urlParameters.put("apiKey", apiKey);
 //        commands.put("hypervisor", "KVM");
-        urlParameters.put("signature", CloudStack.calculateSignature(KEY, urlParameters));
+        urlParameters.put("signature", CloudStack.calculateSignature(key, urlParameters));
 
-        return BASE_URL + CloudStack.toParametersString(urlParameters);
+        return baseURL + CloudStack.toParametersString(urlParameters);
     }
 
     public Hypervisor[] getKVMHypervisors(){
@@ -72,7 +75,9 @@ public class CloudStack {
         command.put("hypervisor","KVM");
 //        commands.put("id", "f4dd2c32-ad2d-4f70-9b2d-753c37ff3c45");
 
-        System.out.println(this.generateURL(command));
+        String requestURL = generateURL(command);
+        Element root = requests.get(requestURL).getDocumentElement();
+        System.out.println(root.getElementsByTagName("host").item(0));
         return null;
     }
 }
