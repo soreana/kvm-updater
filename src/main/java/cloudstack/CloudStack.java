@@ -20,7 +20,7 @@ public class CloudStack {
     private final String key;
     private final Requests requests;
     private final String privateKey;
-    private final Hypervisor[] hypervisors;
+    private Map<String,KVM> hypervisors;
 
     public CloudStack(String baseURL, String key, String apiKey, String privateKey) throws CloudStackException {
         this.baseURL = baseURL;
@@ -28,9 +28,9 @@ public class CloudStack {
         this.apiKey = apiKey;
         this.privateKey = privateKey;
         this.requests = new Requests();
-        this.hypervisors = initializeKVMHypervisors();
+        initializeKVMHypervisors();
 
-        System.out.println(Arrays.toString(hypervisors));
+        System.out.println(Arrays.toString(new Map[]{hypervisors}));
     }
 
     public static String calculateSignature(String key, Map<String, String> commands) {
@@ -77,7 +77,7 @@ public class CloudStack {
         return baseURL + CloudStack.toParametersString(urlParameters);
     }
 
-    private Hypervisor[] initializeKVMHypervisors() throws CloudStackException {
+    private void initializeKVMHypervisors() throws CloudStackException {
         Map<String, String> command = new LinkedHashMap<>();
 
         command.put("command", "listHosts");
@@ -90,7 +90,6 @@ public class CloudStack {
 
         NodeList hosts = root.getElementsByTagName("host");
 
-        Hypervisor[] hypervisors = new Hypervisor[hosts.getLength()];
         String id,ip,name ,state,resourceState;
 
         for (int i = 0; i < hosts.getLength(); i++) {
@@ -105,15 +104,13 @@ public class CloudStack {
                 resourceState = getTextContent(host, "resourcestate");
 
                 try {
-                    hypervisors[i] = new KVM( id, ip, name, state, resourceState, privateKey);
+                    hypervisors.put(id,new KVM( id, ip, name, state, resourceState, privateKey));
                 } catch (UnknownHostException e) {
                     throw new CloudStackException("CloudStack can't access KVM Host at: " + ip, e);
                 }
             }
 
         }
-
-        return hypervisors;
     }
 
     private static String getTextContent(Element e, String tagName) {
