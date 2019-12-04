@@ -9,6 +9,7 @@ import org.w3c.dom.NodeList;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.net.UnknownHostException;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.TreeMap;
@@ -28,6 +29,8 @@ public class CloudStack {
         this.privateKey = privateKey;
         this.requests = new Requests();
         this.hypervisors = initializeKVMHypervisors();
+
+        System.out.println(Arrays.toString(hypervisors));
     }
 
     public static String calculateSignature(String key, Map<String, String> commands) {

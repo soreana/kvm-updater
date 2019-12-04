@@ -2,11 +2,13 @@ package cloudstack;
 
 import com.jcabi.ssh.Shell;
 import com.jcabi.ssh.Ssh;
+import lombok.ToString;
 
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
+@ToString
 class KVM implements Hypervisor {
     private final Shell shell;
     private final String id;

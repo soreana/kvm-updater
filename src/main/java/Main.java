@@ -1,8 +1,10 @@
 import cloudstack.CloudStack;
+import cloudstack.CloudStackException;
 import cloudstack.Hypervisor;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import tools.*;
 
-import java.io.*;
 import java.util.*;
 
 
@@ -10,13 +12,16 @@ public class Main {
     private static CloudStack cs;
     private static String privateKey;
     private static Hypervisor[] hypervisors;
+    private static Logger log = LogManager.getLogger(Main.class);
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws CloudStackException {
         MainArgs mainArgs = Utils.processArgs(args);
 
         cs = new CloudStack(mainArgs.baseURL,mainArgs.key,mainArgs.apiKey, privateKey);
 
         Map<String, String> commands = new LinkedHashMap<>();
+
+        log.info("hello world");
 
         commands.put("command", "listHosts");
 //        commands.put("command", "listEventTypes");
