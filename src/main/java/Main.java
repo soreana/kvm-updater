@@ -1,18 +1,18 @@
 import tools.*;
 
 import java.io.*;
-import java.net.*;
 import java.util.*;
 
 
 public class Main {
     private static CloudStack cs;
+    private static String privateKey;
     private static Hypervisor[] hypervisors;
 
-    public static void main(String[] args) throws IOException, URISyntaxException {
+    public static void main(String[] args) throws IOException {
         MainArgs mainArgs = Utils.processArgs(args);
 
-        cs = new CloudStack(mainArgs.baseURL,mainArgs.key,mainArgs.apiKey);
+        cs = new CloudStack(mainArgs.baseURL,mainArgs.key,mainArgs.apiKey, privateKey);
 
         Map<String, String> commands = new LinkedHashMap<>();
 
@@ -32,7 +32,7 @@ public class Main {
 
 
         // todo get KVM Host info
-        hypervisors = cs.getKVMHypervisors();
+//        hypervisors = cs.initializeKVMHypervisors();
         // todo create appropriate KVM Objects
         // todo initialize scheduler
         // todo update first machine
@@ -40,8 +40,8 @@ public class Main {
 
 //        System.out.println(urlFriendlyOf(baseURL + toParametersString(commands) + "&signature=" + signature));
 
-        KVM hp = new KVM("kashipazha.ir", "asa", Utils.readPrivateKey());
-        System.out.println(hp.update());
-        System.out.println(hp.reboot());
+//        CloudStack.KVM hp = new CloudStack.KVM("kashipazha.ir", "asa", Utils.readPrivateKey());
+//        System.out.println(hp.update());
+//        System.out.println(hp.reboot());
     }
 }

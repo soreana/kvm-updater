@@ -42,7 +42,9 @@ public class Requests {
                     Objects.requireNonNull(response.body())
                             .string().getBytes(StandardCharsets.UTF_8));
 
-            return builder.parse(input);
+            Document doc =  builder.parse(input);
+            doc.normalize();
+            return doc;
         } catch (IOException | SAXException e) {
             throw new RuntimeException(e);
         }
