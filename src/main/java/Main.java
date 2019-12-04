@@ -1,3 +1,5 @@
+import cloudstack.CloudStack;
+import cloudstack.Hypervisor;
 import tools.*;
 
 import java.io.*;

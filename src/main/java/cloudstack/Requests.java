@@ -1,4 +1,4 @@
-package tools;
+package cloudstack;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -14,10 +14,10 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
-public class Requests {
+class Requests {
     private DocumentBuilder builder;
 
-    public Requests() {
+    Requests() {
         try {
             DocumentBuilderFactory factory =
                     DocumentBuilderFactory.newInstance();
@@ -27,7 +27,7 @@ public class Requests {
         }
     }
 
-    public Document get(String url) {
+    Document get(String url) {
         OkHttpClient client = new OkHttpClient();
 
         Request request = new Request.Builder()

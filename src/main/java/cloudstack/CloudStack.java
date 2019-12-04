@@ -1,16 +1,12 @@
-package tools;
+package cloudstack;
 
-import com.jcabi.ssh.Shell;
-import com.jcabi.ssh.Ssh;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.digest.HmacUtils;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.net.InetAddress;
 import java.net.URLEncoder;
 import java.net.UnknownHostException;
 import java.util.LinkedHashMap;
@@ -25,7 +21,7 @@ public class CloudStack {
     private final String privateKey;
     private final Hypervisor[] hypervisors;
 
-    public CloudStack(String baseURL, String key, String apiKey, String privateKey) {
+    public CloudStack(String baseURL, String key, String apiKey, String privateKey) throws CloudStackException {
         this.baseURL = baseURL;
         this.key = key;
         this.apiKey = apiKey;
@@ -78,7 +74,7 @@ public class CloudStack {
         return baseURL + CloudStack.toParametersString(urlParameters);
     }
 
-    private Hypervisor[] initializeKVMHypervisors() {
+    private Hypervisor[] initializeKVMHypervisors() throws CloudStackException {
         Map<String, String> command = new LinkedHashMap<>();
 
         command.put("command", "listHosts");
@@ -106,9 +102,9 @@ public class CloudStack {
                 resourceState = getTextContent(host, "resourcestate");
 
                 try {
-                    hypervisors[i] = new KVM(id, ip, name, state, resourceState);
+                    hypervisors[i] = new KVM( id, ip, name, state, resourceState, privateKey);
                 } catch (UnknownHostException e) {
-                    e.printStackTrace();
+                    throw new CloudStackException("CloudStack can't access KVM Host at: " + ip, e);
                 }
             }
 
@@ -121,32 +117,4 @@ public class CloudStack {
         return e.getElementsByTagName(tagName).item(0).getTextContent();
     }
 
-    private class KVM implements Hypervisor {
-        private final Shell shell;
-        private final String id;
-        private final InetAddress ip;
-        private final String name;
-        private String state;
-        private String resourceState;
-
-        private KVM(String id, String ip, String name, String state, String resourceState) throws UnknownHostException {
-            this.id = id;
-            this.ip = InetAddress.getByName(ip);
-            this.name = name;
-            this.state = state;
-            this.resourceState = resourceState;
-
-            this.shell = new Ssh(ip, 22, "root", privateKey);
-        }
-
-        @Override
-        public String update() throws IOException {
-            return new Shell.Plain(shell).exec("echo 'update'");
-        }
-
-        @Override
-        public String reboot() throws IOException {
-            return new Shell.Plain(shell).exec("echo 'reboot'");
-        }
-    }
 }
