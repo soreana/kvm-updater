@@ -5,8 +5,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import tools.*;
 
-import java.util.*;
-
 
 public class Main {
     private static CloudStack cs;
@@ -19,11 +17,15 @@ public class Main {
 
         cs = new CloudStack(mainArgs.baseURL,mainArgs.key,mainArgs.apiKey, privateKey);
 
-        Map<String, String> commands = new LinkedHashMap<>();
+        hypervisors = cs.getHypervisors();
+
+        cs.updateHypervisor(hypervisors[1].getId());
+//        Map<String, String> commands = new LinkedHashMap<>();
 
         log.info("hello world");
 
-        commands.put("command", "listHosts");
+        cs.test();
+//        commands.put("command", "listHosts");
 //        commands.put("command", "listEventTypes");
 
 //        commands.put("command", "prepareHostForMaintenance");
@@ -31,11 +33,11 @@ public class Main {
 //        commands.put("command", "queryAsyncJobResult");
 //        commands.put("jobid", "7e09dc2f-1929-4a7e-898f-2b541f778223");
 //        commands.put("command","listHypervisors");
-        commands.put("hypervisor","KVM");
+//        commands.put("hypervisor","KVM");
 //        commands.put("id", "f4dd2c32-ad2d-4f70-9b2d-753c37ff3c45");
-        commands.put("apiKey", mainArgs.apiKey);
+//        commands.put("apiKey", mainArgs.apiKey);
 //        commands.put("hypervisor", "KVM");
-        commands.put("signature", CloudStack.calculateSignature(mainArgs.key, commands));
+//        commands.put("signature", CloudStack.calculateSignature(mainArgs.key, commands));
 
 
         // todo get KVM Host info
