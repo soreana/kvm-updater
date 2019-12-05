@@ -84,8 +84,8 @@ class KVM {
         return getVmsOnHypervisor("listVirtualMachines", "virtualmachine");
     }
 
-    public String update() throws IOException {
-        return new Shell.Plain(shell).exec("echo 'update'");
+    String update() throws IOException {
+        return new Shell.Plain(shell).exec("apt update");
     }
 
     String reboot() throws IOException {

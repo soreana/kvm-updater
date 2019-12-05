@@ -242,7 +242,7 @@ public class CloudStack {
         prepareHostForMaintenance(kvm);
         try {
             kvm.update();
-            kvm.reboot();
+//            kvm.reboot();
         } catch (IOException e) {
             e.printStackTrace();
         }

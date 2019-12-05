@@ -11,8 +11,8 @@ import java.util.concurrent.TimeUnit;
 
 public interface Common {
 
-    static String readPrivateKey() throws IOException {
-        File file = new File("./keys/id_rsa");
+    static String readPrivateKey(String privateKeyPath) throws IOException {
+        File file = new File(privateKeyPath);
 
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
             String st;
