@@ -29,6 +29,7 @@ class KVM {
     private String state;
     private String resourceState;
     private final CloudStack cs;
+    @ToString.Exclude
     private final Shell shell;
 
     private static Logger log = LogManager.getLogger(KVM.class);
