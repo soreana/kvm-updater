@@ -37,7 +37,7 @@ public class CloudStack {
         return new String(Base64.encodeBase64(HmacUtils.getHmacSha1(keyBytes).doFinal(parametersBytes))).trim();
     }
 
-    public CloudStack(String baseURL, String key, String apiKey, String privateKey) throws CloudStackException {
+    public CloudStack(String baseURL, String key, String apiKey, String privateKey) {
         this.baseURL = baseURL;
         this.key = key;
         this.apiKey = apiKey;
@@ -57,7 +57,7 @@ public class CloudStack {
         return baseURL + Common.toParametersString(urlParameters);
     }
 
-    private void initializeKVMHypervisors() throws CloudStackException {
+    private void initializeKVMHypervisors() {
         Map<String, String> command = new LinkedHashMap<>();
 
         command.put("command", "listHosts");
@@ -85,7 +85,7 @@ public class CloudStack {
                     log.info(() -> "Added new KVM: " + kvm);
                     hypervisors.put(id, kvm);
                 } catch (UnknownHostException e) {
-                    throw new CloudStackException("CloudStack can't access KVM Host at: " + ip, e);
+                    throw new CloudStackError("CloudStack can't access KVM Host at: " + ip, e);
                 }
             }
 
@@ -114,12 +114,12 @@ public class CloudStack {
         return hostIDs;
     }
 
-    private String getHostForMigration(String id) throws CloudStackException {
+    private String getHostForMigration(String id) {
         List<String> candidates = migrationCandidate(id);
         log.info(() -> "Migration candidates are: " + candidates);
 
         if (candidates.isEmpty())
-            throw new CloudStackException("Can't find migrate candidate.");
+            throw new CloudStackError("Can't find migration candidate.");
 
         List<String> previouslyUpdatedCandidates = candidates.stream()
                 .filter(e -> updatedHypervisorsID.contains(e))
@@ -164,7 +164,7 @@ public class CloudStack {
         return new Job(this, jobId);
     }
 
-    private void migrateVMsOn(KVM kvm) throws CloudStackException {
+    private void migrateVMsOn(KVM kvm) throws JobFailedException {
         List<Job> jobs = new ArrayList<>();
 
         if (kvm.hasVm()) {
@@ -192,31 +192,31 @@ public class CloudStack {
         log.info("Successfully migrated vms.");
     }
 
-    private void prepareHostForMaintenance(KVM kvm) throws CloudStackException {
+    private void prepareHostForMaintenance(KVM kvm) throws JobFailedException {
         Job job = kvm.prepareForMaintenance();
         while (!job.finished())
             Common.sleep(1);
-        log.info(()-> "Prepared host: " + kvm.getId() + " for maintenance.");
+        log.info(() -> "Prepared host: " + kvm.getId() + " for maintenance.");
     }
 
-    private void cancelHostMaintenance(KVM kvm) throws CloudStackException {
+    private void cancelHostMaintenance(KVM kvm) throws JobFailedException {
         Job job = kvm.cancelMaintenance();
         while (!job.finished())
             Common.sleep(1);
-        log.info(()-> "Canceled host: " + kvm.getId() + " maintenance.");
+        log.info(() -> "Canceled host: " + kvm.getId() + " maintenance.");
     }
 
-    private KVM getKVMWithMinimumVMs(){
+    private KVM getKVMWithMinimumVMs() {
         Iterator<KVM> it = hypervisors.values().iterator();
         KVM hostWithMinimumVM = it.next();
         KVM current;
         int minVmCount = hostWithMinimumVM.getVmsOnHypervisor().size();
         int tmp;
 
-        while (it.hasNext()){
+        while (it.hasNext()) {
             current = it.next();
             tmp = current.getVmsOnHypervisor().size();
-            if(tmp < minVmCount){
+            if (tmp < minVmCount) {
                 hostWithMinimumVM = current;
                 minVmCount = tmp;
             }
@@ -224,29 +224,29 @@ public class CloudStack {
         return hostWithMinimumVM;
     }
 
-    public void updateHypervisors() throws CloudStackException {
+    public void updateHypervisors() throws JobFailedException {
         KVM current = getKVMWithMinimumVMs();
         updateHypervisor(current);
 
-        for (KVM kvm: hypervisors.values())
+        for (KVM kvm : hypervisors.values())
             updateHypervisor(kvm);
     }
 
     @NotNull
-    private void updateHypervisor(KVM kvm) throws CloudStackException {
-        if(updatedHypervisorsID.contains(kvm.getId()))
+    private void updateHypervisor(KVM kvm) throws JobFailedException {
+        if (updatedHypervisorsID.contains(kvm.getId()))
             return;
 
         migrateVMsOn(kvm);
 
         prepareHostForMaintenance(kvm);
-        // todo update system
-        // todo reboot
+        try {
+            kvm.update();
+            kvm.reboot();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         cancelHostMaintenance(kvm);
         updatedHypervisorsID.add(kvm.getId());
-    }
-
-    public void restart(String id) throws IOException {
-        hypervisors.get(id).reboot();
     }
 }

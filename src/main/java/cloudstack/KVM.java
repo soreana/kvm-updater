@@ -24,6 +24,7 @@ class KVM {
     @Getter
     private final String id;
     private final InetAddress ip;
+    @Getter
     private final String name;
     private String state;
     private String resourceState;

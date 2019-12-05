@@ -20,7 +20,7 @@ public class Job {
         this.id = id;
     }
 
-    boolean finished() throws CloudStackException {
+    boolean finished() throws JobFailedException {
         Map<String, String> command = new LinkedHashMap<>();
 
         command.put("command", "queryAsyncJobResult");
@@ -39,7 +39,7 @@ public class Job {
                 return true;
             default:
                 log.info(() -> "Job " + id + " finished with error.");
-                throw new CloudStackException("Job finished with error.", this);
+                throw new JobFailedException("Job finished with error.", this);
         }
     }
 }
