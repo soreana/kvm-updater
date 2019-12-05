@@ -9,6 +9,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import utils.Common;
 
+import javax.validation.constraints.NotNull;
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.*;
@@ -137,20 +138,9 @@ public class CloudStack {
         }
     }
 
-    public void test() {
-        Map<String, String> command = new LinkedHashMap<>();
-
-        command.put("command", "queryAsyncJobResult");
-//        command.put("jobid", "cc581c3b-be17-4c3d-8414-9d40ea6c8b3c");
-        command.put("jobid", "28698626-4b6c-4d9b-b6ab-e021d1ba31af");
-
-        String requestURL = generateURL(command);
-
-        System.out.println(requestURL);
-    }
-
     Element apiCall(Map<String, String> command) {
         String requestURL = generateURL(command);
+        log.debug(requestURL);
         return requests.get(requestURL).getDocumentElement();
     }
 
@@ -216,19 +206,31 @@ public class CloudStack {
         log.info(()-> "Canceled host: " + kvm.getId() + " maintenance.");
     }
 
-    public void updateHypervisor(String id) throws CloudStackException {
-        if (!hypervisors.containsKey(id))
-            throw new RuntimeException("Hypervisor with id: " + id + " not found.");
+//    private KVM getKVMWithMinimumVMs(){
+//        for (KVM current: hypervisors.values()){
+//            current.getVmsOnHypervisor();
+//
+//        }
+//
+//    }
 
-        KVM kvm = hypervisors.get(id);
+    public void updateHypervisors() throws CloudStackException {
+        // todo get host with minimum vms
+        // todo
 
+        for (KVM kvm: hypervisors.values())
+            updateHypervisor(kvm);
+    }
+
+    @NotNull
+    private void updateHypervisor(KVM kvm) throws CloudStackException {
         migrateVMsOn(kvm);
 
         prepareHostForMaintenance(kvm);
         // todo update system
         // todo reboot
         cancelHostMaintenance(kvm);
-        updatedHypervisorsID.add(id);
+        updatedHypervisorsID.add(kvm.getId());
     }
 
     public void restart(String id) throws IOException {
