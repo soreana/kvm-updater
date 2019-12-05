@@ -47,7 +47,6 @@ class KVM {
         return !getVmsOnHypervisor().isEmpty();
     }
 
-
     List<VM> getVmsOnHypervisor() {
         List<VM> vms = getSystemVms();
         vms.addAll(getVirtualMachines());
@@ -88,7 +87,7 @@ class KVM {
         return new Shell.Plain(shell).exec("echo 'update'");
     }
 
-    public String reboot() throws IOException {
+    String reboot() throws IOException {
         return new Shell.Plain(shell).exec("echo 'reboot'");
     }
 

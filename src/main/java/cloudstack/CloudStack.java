@@ -206,17 +206,27 @@ public class CloudStack {
         log.info(()-> "Canceled host: " + kvm.getId() + " maintenance.");
     }
 
-//    private KVM getKVMWithMinimumVMs(){
-//        for (KVM current: hypervisors.values()){
-//            current.getVmsOnHypervisor();
-//
-//        }
-//
-//    }
+    private KVM getKVMWithMinimumVMs(){
+        Iterator<KVM> it = hypervisors.values().iterator();
+        KVM hostWithMinimumVM = it.next();
+        KVM current;
+        int minVmCount = hostWithMinimumVM.getVmsOnHypervisor().size();
+        int tmp;
+
+        while (it.hasNext()){
+            current = it.next();
+            tmp = current.getVmsOnHypervisor().size();
+            if(tmp < minVmCount){
+                hostWithMinimumVM = current;
+                minVmCount = tmp;
+            }
+        }
+        return hostWithMinimumVM;
+    }
 
     public void updateHypervisors() throws CloudStackException {
-        // todo get host with minimum vms
-        // todo
+        KVM current = getKVMWithMinimumVMs();
+        updateHypervisor(current);
 
         for (KVM kvm: hypervisors.values())
             updateHypervisor(kvm);
@@ -224,6 +234,9 @@ public class CloudStack {
 
     @NotNull
     private void updateHypervisor(KVM kvm) throws CloudStackException {
+        if(updatedHypervisorsID.contains(kvm.getId()))
+            return;
+
         migrateVMsOn(kvm);
 
         prepareHostForMaintenance(kvm);
