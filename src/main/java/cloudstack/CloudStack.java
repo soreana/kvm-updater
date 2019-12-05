@@ -7,13 +7,11 @@ import org.apache.logging.log4j.Logger;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import tools.Utils;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.net.UnknownHostException;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class CloudStack {
@@ -31,38 +29,11 @@ public class CloudStack {
     private static String calculateSignature(String key, Map<String, String> commands) {
 
         Map<String, String> sortedCommands = new TreeMap<>(commands);
-        String parameters = toParametersString(sortedCommands).toLowerCase();
+        String parameters = Utils.toParametersString(sortedCommands).toLowerCase();
         byte[] keyBytes = key.getBytes();
         byte[] parametersBytes = parameters.getBytes();
 
         return new String(Base64.encodeBase64(HmacUtils.getHmacSha1(keyBytes).doFinal(parametersBytes))).trim();
-    }
-
-    private static String toURLFriendly(String s) {
-        try {
-            return URLEncoder.encode(s, "UTF-8");
-        } catch (UnsupportedEncodingException ignored) {
-            throw new RuntimeException("UTF-8 encoding was missed !!!!");
-        }
-    }
-
-    private static String toParametersString(Map<String, String> map) {
-        StringBuilder sb = new StringBuilder();
-
-        for (String current : map.keySet()) {
-            sb.append(current)
-                    .append("=")
-                    .append(toURLFriendly(map.get(current)))
-                    .append("&");
-        }
-
-        sb.delete(sb.length() - 1, sb.length());
-
-        return sb.toString();
-    }
-
-    private static String getTextContent(Element e, String tagName) {
-        return e.getElementsByTagName(tagName).item(0).getTextContent();
     }
 
     public CloudStack(String baseURL, String key, String apiKey, String privateKey) throws CloudStackException {
@@ -73,7 +44,7 @@ public class CloudStack {
         this.requests = new Requests();
         initializeKVMHypervisors();
 
-        System.out.println(Arrays.toString(new Map[]{hypervisors}));
+        log.info("successfully initialized CloudStack.");
     }
 
     private String generateURL(Map<String, String> command) {
@@ -82,7 +53,7 @@ public class CloudStack {
         urlParameters.put("apiKey", apiKey);
         urlParameters.put("signature", CloudStack.calculateSignature(key, urlParameters));
 
-        return baseURL + CloudStack.toParametersString(urlParameters);
+        return baseURL + Utils.toParametersString(urlParameters);
     }
 
     private void initializeKVMHypervisors() throws CloudStackException {
@@ -91,10 +62,7 @@ public class CloudStack {
         command.put("command", "listHosts");
         command.put("hypervisor", "KVM");
 
-        String requestURL = generateURL(command);
-        Element root = requests.get(requestURL).getDocumentElement();
-
-        // todo check root for error
+        Element root = apiCall(command);
 
         NodeList hosts = root.getElementsByTagName("host");
 
@@ -105,14 +73,16 @@ public class CloudStack {
             if (node.getNodeType() == Node.ELEMENT_NODE) {
                 Element host = (Element) node;
 
-                id = getTextContent(host, "id");
-                ip = getTextContent(host, "ipaddress");
-                name = getTextContent(host, "name");
-                state = getTextContent(host, "state");
-                resourceState = getTextContent(host, "resourcestate");
+                id = Utils.getTextContent(host, "id");
+                ip = Utils.getTextContent(host, "ipaddress");
+                name = Utils.getTextContent(host, "name");
+                state = Utils.getTextContent(host, "state");
+                resourceState = Utils.getTextContent(host, "resourcestate");
 
                 try {
-                    hypervisors.put(id, new KVM(id, ip, name, state, resourceState, privateKey));
+                    KVM kvm = new KVM(this, id, ip, name, state, resourceState, privateKey);
+                    log.info(() -> "Added new KVM: " + kvm);
+                    hypervisors.put(id, kvm);
                 } catch (UnknownHostException e) {
                     throw new CloudStackException("CloudStack can't access KVM Host at: " + ip, e);
                 }
@@ -121,23 +91,13 @@ public class CloudStack {
         }
     }
 
-    public Hypervisor[] getHypervisors() {
-        return hypervisors.values().toArray(new Hypervisor[0]);
-    }
-
-    private boolean hasVm(String id) {
-        return !getVmsOnHypervisor(id).isEmpty();
-    }
-
     private List<String> migrationCandidate(String vmId) {
         Map<String, String> command = new LinkedHashMap<>();
 
         command.put("command", "findHostsForMigration");
         command.put("virtualmachineid", vmId);
 
-        String requestURL = generateURL(command);
-
-        Element root = requests.get(requestURL).getDocumentElement();
+        Element root = apiCall(command);
 
         NodeList virtualMachines = root.getElementsByTagName("host");
         List<String> hostIDs = new ArrayList<>();
@@ -146,7 +106,7 @@ public class CloudStack {
             Node node = virtualMachines.item(i);
             if (node.getNodeType() == Node.ELEMENT_NODE) {
                 Element vm = (Element) node;
-                hostIDs.add(getTextContent(vm, "id"));
+                hostIDs.add(Utils.getTextContent(vm, "id"));
             }
         }
 
@@ -189,7 +149,13 @@ public class CloudStack {
         System.out.println(requestURL);
     }
 
-    private Job migrateVmTo(VM vm, String hostId) {
+    Element apiCall(Map<String, String> command) {
+        String requestURL = generateURL(command);
+
+        return requests.get(requestURL).getDocumentElement();
+    }
+
+    Job migrateVmTo(VM vm, String hostId) {
         Map<String, String> command = new LinkedHashMap<>();
 
         if (vm.isSystemVM())
@@ -200,42 +166,36 @@ public class CloudStack {
         command.put("virtualmachineid", vm.getId());
         command.put("hostid", hostId);
 
-        String requestURL = generateURL(command);
-        Element root = requests.get(requestURL).getDocumentElement();
+        Element root = apiCall(command);
 
         String jobId = root.getElementsByTagName("jobid").item(0).getTextContent();
 
         log.info(() -> "Request vm: " + vm.getId() + " migration to: " + hostId + " jobid is: " + jobId);
 
-        return new Job(jobId);
+        return new Job(this, jobId);
     }
 
-    private static void sleep(int time){
-        try {
-            TimeUnit.SECONDS.sleep(time);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void migrateHostsOn(String hostId) throws CloudStackException{
+    private void migrateVMsOn(KVM kvm) throws CloudStackException {
         List<Job> jobs = new ArrayList<>();
 
-        if (hasVm(hostId)) {
+        if (kvm.hasVm()) {
             log.info("There existed vms in currently selected hypervisor.");
-            List<VM> vms = getVmsOnHypervisor(hostId);
+            List<VM> vms = kvm.getVmsOnHypervisor();
             for (VM current : vms) {
                 String migrationHost = getHostForMigration(current.getId());
                 log.info(() -> "Migration host is: " + migrationHost);
                 jobs.add(migrateVmTo(current, migrationHost));
             }
             log.info("Finished sending migration requests for vms.");
+        } else {
+            log.info("There isn't any vm on specified hypervisor, no need to migrate VM.");
+            return;
         }
 
         while (!jobs.isEmpty()) {
-            sleep(1);
+            Utils.sleep(1);
             for (int i = 0; i < jobs.size(); i++) {
-                if (jobFinished(jobs.get(i)))
+                if (jobs.get(i).finished())
                     jobs.remove(i);
             }
         }
@@ -243,36 +203,11 @@ public class CloudStack {
         log.info("Successfully migrated vms.");
     }
 
-    private boolean jobFinished(Job job) throws CloudStackException {
-        Map<String, String> command = new LinkedHashMap<>();
-
-        command.put("command", "queryAsyncJobResult");
-        command.put("jobid", job.getID());
-
-        String requestURL = generateURL(command);
-        Element root = requests.get(requestURL).getDocumentElement();
-
-        String jobStatus = root.getElementsByTagName("jobstatus").item(0).getTextContent();
-
-        switch (jobStatus) {
-            case "0":
-                log.info(() -> "Job " + job.getID() + " is pending.");
-                return false;
-            case "1":
-                log.info(() -> "Job " + job.getID() + " finished.");
-                return true;
-            default:
-                log.info(() -> "Job " + job.getID() + " finished with error.");
-                throw new CloudStackException("Job finished with error.", job);
-        }
-    }
-
-
     public void updateHypervisor(String id) throws CloudStackException {
         if (!hypervisors.containsKey(id))
             throw new RuntimeException("Hypervisor with id: " + id + " not found.");
 
-        migrateHostsOn(id);
+        migrateVMsOn(hypervisors.get(id));
 
         // todo put host in maintenance mode
         // todo update system
@@ -281,46 +216,11 @@ public class CloudStack {
         updatedHypervisorsID.add(id);
     }
 
-    private List<VM> getVmsOnHypervisor(String id) {
-        List<VM> vms = getSystemVms(id);
-        vms.addAll(getVirtualMachines(id));
-
-        return vms;
-    }
-
-    private List<VM> getVmsOnHypervisor(String id, String _command, String tagName) {
-        Map<String, String> command = new LinkedHashMap<>();
-
-        command.put("command", _command);
-        command.put("hostid", id);
-
-        String requestURL = generateURL(command);
-
-        Element root = requests.get(requestURL).getDocumentElement();
-
-        NodeList virtualMachines = root.getElementsByTagName(tagName);
-        List<VM> vms = new ArrayList<>();
-
-        for (int i = 0; i < virtualMachines.getLength(); i++) {
-            Node node = virtualMachines.item(i);
-            if (node.getNodeType() == Node.ELEMENT_NODE) {
-                Element vm = (Element) node;
-                vms.add(new VM(getTextContent(vm, "id"), tagName));
-            }
-        }
-
-        return vms;
-    }
-
-    private List<VM> getSystemVms(String id) {
-        return getVmsOnHypervisor(id, "listSystemVms", "systemvm");
-    }
-
-    private List<VM> getVirtualMachines(String id) {
-        return getVmsOnHypervisor(id, "listVirtualMachines", "virtualmachine");
-    }
-
     public void restart(String id) throws IOException {
         hypervisors.get(id).reboot();
+    }
+
+    public Hypervisor[] getHypervisors() {
+        return hypervisors.values().toArray(new Hypervisor[0]);
     }
 }

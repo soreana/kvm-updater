@@ -1,9 +1,13 @@
 package tools;
 
 import com.beust.jcommander.JCommander;
+import org.w3c.dom.Element;
 
 import java.io.*;
+import java.net.URLEncoder;
+import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 
 public interface Utils {
 
@@ -56,5 +60,40 @@ public interface Utils {
         }
 
         return pro;
+    }
+
+    static void sleep(int time){
+        try {
+            TimeUnit.SECONDS.sleep(time);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    static String getTextContent(Element e, String tagName) {
+        return e.getElementsByTagName(tagName).item(0).getTextContent();
+    }
+
+    static String toURLFriendly(String s) {
+        try {
+            return URLEncoder.encode(s, "UTF-8");
+        } catch (UnsupportedEncodingException ignored) {
+            throw new RuntimeException("UTF-8 encoding was missed !!!!");
+        }
+    }
+
+    static String toParametersString(Map<String, String> map) {
+        StringBuilder sb = new StringBuilder();
+
+        for (String current : map.keySet()) {
+            sb.append(current)
+                    .append("=")
+                    .append(toURLFriendly(map.get(current)))
+                    .append("&");
+        }
+
+        sb.delete(sb.length() - 1, sb.length());
+
+        return sb.toString();
     }
 }
