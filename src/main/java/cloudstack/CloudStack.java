@@ -236,8 +236,4 @@ public class CloudStack {
     public void restart(String id) throws IOException {
         hypervisors.get(id).reboot();
     }
-
-    public Hypervisor[] getHypervisors() {
-        return hypervisors.values().toArray(new Hypervisor[0]);
-    }
 }

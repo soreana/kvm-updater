@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 @ToString
-class KVM implements Hypervisor {
+class KVM {
     @Getter
     private final String id;
     private final InetAddress ip;
