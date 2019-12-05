@@ -1,13 +1,13 @@
-package tools;
+package utils;
 
 import com.beust.jcommander.Parameter;
-//import org.apache.logging.log4j.LogManager;
-//import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.Properties;
 
 public class MainArgs {
-//    private static Logger log = LogManager.getLogger(MainArgs.class);
+    private static Logger log = LogManager.getLogger(MainArgs.class);
 
     private static String DEFAULT_CONFIG_PATH = "conf/config.properties";
 
@@ -17,7 +17,7 @@ public class MainArgs {
 
 
     @Parameter(names = "-c", description = "configuration file path")
-    public String configPath = DEFAULT_CONFIG_PATH;
+    String configPath = DEFAULT_CONFIG_PATH;
 
     @Parameter(names = {"-b", "--base-url"}, description = "Cloudstack API base url")
     public String baseURL = DEFAULT_BASE_URL;
@@ -28,14 +28,14 @@ public class MainArgs {
     @Parameter(names = "--api-key", description = "User's API key")
     public String apiKey = DEFAULT_API_Key;
 
-    protected void updateDefaultsWith(Properties pro) {
-        this.baseURL = Utils.updateIfSetsToDefault(pro, "cloudstack.baseurl", this.baseURL, DEFAULT_BASE_URL);
-//        log.info(() -> "Redis address is: " + this.redisAddress);
+    void updateDefaultsWith(Properties pro) {
+        this.baseURL = Common.updateIfSetsToDefault(pro, "cloudstack.baseurl", this.baseURL, DEFAULT_BASE_URL);
+        log.info(() -> "Base URL is: " + this.baseURL);
 
-        this.key = Utils.updateIfSetsToDefault(pro, "cloudstack.api.secret", this.key, DEFAULT_KEY);
-//        log.info(() -> "Alish's raha join url is: " + this.rahaJoin);
+        this.key = Common.updateIfSetsToDefault(pro, "cloudstack.api.secret", this.key, DEFAULT_KEY);
+        log.info(() -> "Secret key is: " + this.key);
 
-        this.apiKey = Utils.updateIfSetsToDefault(pro, "cloudstack.api.key", this.apiKey, DEFAULT_API_Key);
-//        log.info(() -> "Alish's raha challenge url is: " + this.rahaChallenge);
+        this.apiKey = Common.updateIfSetsToDefault(pro, "cloudstack.api.key", this.apiKey, DEFAULT_API_Key);
+        log.info(() -> "API key is: " + this.apiKey);
     }
 }

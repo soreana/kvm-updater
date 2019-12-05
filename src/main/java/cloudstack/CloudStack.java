@@ -7,7 +7,7 @@ import org.apache.logging.log4j.Logger;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import tools.Utils;
+import utils.Common;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
@@ -29,7 +29,7 @@ public class CloudStack {
     private static String calculateSignature(String key, Map<String, String> commands) {
 
         Map<String, String> sortedCommands = new TreeMap<>(commands);
-        String parameters = Utils.toParametersString(sortedCommands).toLowerCase();
+        String parameters = Common.toParametersString(sortedCommands).toLowerCase();
         byte[] keyBytes = key.getBytes();
         byte[] parametersBytes = parameters.getBytes();
 
@@ -53,7 +53,7 @@ public class CloudStack {
         urlParameters.put("apiKey", apiKey);
         urlParameters.put("signature", CloudStack.calculateSignature(key, urlParameters));
 
-        return baseURL + Utils.toParametersString(urlParameters);
+        return baseURL + Common.toParametersString(urlParameters);
     }
 
     private void initializeKVMHypervisors() throws CloudStackException {
@@ -73,11 +73,11 @@ public class CloudStack {
             if (node.getNodeType() == Node.ELEMENT_NODE) {
                 Element host = (Element) node;
 
-                id = Utils.getTextContent(host, "id");
-                ip = Utils.getTextContent(host, "ipaddress");
-                name = Utils.getTextContent(host, "name");
-                state = Utils.getTextContent(host, "state");
-                resourceState = Utils.getTextContent(host, "resourcestate");
+                id = Common.getTextContent(host, "id");
+                ip = Common.getTextContent(host, "ipaddress");
+                name = Common.getTextContent(host, "name");
+                state = Common.getTextContent(host, "state");
+                resourceState = Common.getTextContent(host, "resourcestate");
 
                 try {
                     KVM kvm = new KVM(this, id, ip, name, state, resourceState, privateKey);
@@ -106,7 +106,7 @@ public class CloudStack {
             Node node = virtualMachines.item(i);
             if (node.getNodeType() == Node.ELEMENT_NODE) {
                 Element vm = (Element) node;
-                hostIDs.add(Utils.getTextContent(vm, "id"));
+                hostIDs.add(Common.getTextContent(vm, "id"));
             }
         }
 
@@ -193,7 +193,7 @@ public class CloudStack {
         }
 
         while (!jobs.isEmpty()) {
-            Utils.sleep(1);
+            Common.sleep(1);
             for (int i = 0; i < jobs.size(); i++) {
                 if (jobs.get(i).finished())
                     jobs.remove(i);

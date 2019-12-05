@@ -1,4 +1,4 @@
-package tools;
+package utils;
 
 import com.beust.jcommander.JCommander;
 import org.w3c.dom.Element;
@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
-public interface Utils {
+public interface Common {
 
     static String readPrivateKey() throws IOException {
         File file = new File("./keys/id_rsa");

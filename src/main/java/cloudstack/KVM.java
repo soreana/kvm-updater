@@ -7,7 +7,7 @@ import lombok.ToString;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import tools.Utils;
+import utils.Common;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -65,7 +65,7 @@ class KVM implements Hypervisor {
             Node node = virtualMachines.item(i);
             if (node.getNodeType() == Node.ELEMENT_NODE) {
                 Element vm = (Element) node;
-                vms.add(new VM(Utils.getTextContent(vm, "id"), tagName));
+                vms.add(new VM(Common.getTextContent(vm, "id"), tagName));
             }
         }
 
