@@ -17,8 +17,9 @@ public class Main {
 
         Hypervisor[] hypervisors = cs.getHypervisors();
 
-        cs.updateHypervisor(hypervisors[1].getId());
+        for (Hypervisor current: hypervisors)
+            cs.updateHypervisor(current.getId());
 
-        cs.test();
+//        cs.test();
     }
 }

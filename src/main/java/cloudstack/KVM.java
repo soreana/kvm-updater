@@ -4,6 +4,8 @@ import com.jcabi.ssh.Shell;
 import com.jcabi.ssh.Ssh;
 import lombok.Getter;
 import lombok.ToString;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -27,6 +29,8 @@ class KVM implements Hypervisor {
     private String resourceState;
     private final CloudStack cs;
     private final Shell shell;
+
+    private static Logger log = LogManager.getLogger(KVM.class);
 
     KVM(CloudStack cs, String id, String ip, String name, String state, String resourceState, String privateKey) throws UnknownHostException {
         this.id = id;
@@ -86,5 +90,35 @@ class KVM implements Hypervisor {
 
     public String reboot() throws IOException {
         return new Shell.Plain(shell).exec("echo 'reboot'");
+    }
+
+    Job prepareForMaintenance() {
+        Map<String, String> command = new LinkedHashMap<>();
+
+        command.put("command", "prepareHostForMaintenance");
+        command.put("id", id);
+
+        Element root = cs.apiCall(command);
+
+        String jobId = root.getElementsByTagName("jobid").item(0).getTextContent();
+
+        log.info(() -> "Request maintenance preparation for hypervisor: " + id + " jobid is: " + jobId);
+
+        return new Job(cs, jobId);
+    }
+
+    Job cancelMaintenance() {
+        Map<String, String> command = new LinkedHashMap<>();
+
+        command.put("command", "cancelHostMaintenance");
+        command.put("id", id);
+
+        Element root = cs.apiCall(command);
+
+        String jobId = root.getElementsByTagName("jobid").item(0).getTextContent();
+
+        log.info(() -> "Request maintenance cancellation for hypervisor: " + id + " jobid is: " + jobId);
+
+        return new Job(cs, jobId);
     }
 }

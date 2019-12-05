@@ -133,7 +133,7 @@ public class CloudStack {
         } else {
             log.info(() -> "Get hypervisor candidate from previously updated hypervisor.");
             int randomIndex = new Random().nextInt(previouslyUpdatedCandidates.size());
-            return candidates.get(randomIndex);
+            return previouslyUpdatedCandidates.get(randomIndex);
         }
     }
 
@@ -151,7 +151,6 @@ public class CloudStack {
 
     Element apiCall(Map<String, String> command) {
         String requestURL = generateURL(command);
-
         return requests.get(requestURL).getDocumentElement();
     }
 
@@ -203,16 +202,32 @@ public class CloudStack {
         log.info("Successfully migrated vms.");
     }
 
+    private void prepareHostForMaintenance(KVM kvm) throws CloudStackException {
+        Job job = kvm.prepareForMaintenance();
+        while (!job.finished())
+            Common.sleep(1);
+        log.info(()-> "Prepared host: " + kvm.getId() + " for maintenance.");
+    }
+
+    private void cancelHostMaintenance(KVM kvm) throws CloudStackException {
+        Job job = kvm.cancelMaintenance();
+        while (!job.finished())
+            Common.sleep(1);
+        log.info(()-> "Canceled host: " + kvm.getId() + " maintenance.");
+    }
+
     public void updateHypervisor(String id) throws CloudStackException {
         if (!hypervisors.containsKey(id))
             throw new RuntimeException("Hypervisor with id: " + id + " not found.");
 
-        migrateVMsOn(hypervisors.get(id));
+        KVM kvm = hypervisors.get(id);
 
-        // todo put host in maintenance mode
+        migrateVMsOn(kvm);
+
+        prepareHostForMaintenance(kvm);
         // todo update system
         // todo reboot
-        // todo cancel maintenance mode
+        cancelHostMaintenance(kvm);
         updatedHypervisorsID.add(id);
     }
 
