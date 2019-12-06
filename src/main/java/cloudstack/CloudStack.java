@@ -187,14 +187,16 @@ public class CloudStack {
         log.info("Successfully migrated vms.");
     }
 
-    private void prepareHostForMaintenance(KVM kvm) {
+    private boolean prepareHostForMaintenance(KVM kvm) {
         try {
             PrepareForMaintenanceJob prepareForMaintenanceJob = kvm.prepareForMaintenance();
             while (!prepareForMaintenanceJob.finished())
                 Common.sleep(1);
             log.info(() -> "Prepared host: " + kvm.getId() + " for maintenance.");
+            return false;
         } catch (HostIsAlreadyInMaintenanceModeException e) {
             log.warn("Host " + kvm.getId() + " is already in maintenance mode.");
+            return true;
         }
     }
 
@@ -247,10 +249,12 @@ public class CloudStack {
 
         migrateVMsOn(kvm);
 
-        prepareHostForMaintenance(kvm);
-//        kvm.update();
+        boolean wasInMaintenanceState = prepareHostForMaintenance(kvm);
+        kvm.update();
 //            kvm.reboot();
-        cancelHostMaintenance(kvm);
-        updatedHypervisorsID.add(kvm.getId());
+        if(! wasInMaintenanceState) {
+            cancelHostMaintenance(kvm);
+            updatedHypervisorsID.add(kvm.getId());
+        }
     }
 }
