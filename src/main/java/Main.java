@@ -18,6 +18,7 @@ public class Main {
 
         cs.updateHypervisors();
 
+        log.info("Hypervisors updated successfully.");
         System.exit(0);
     }
 }

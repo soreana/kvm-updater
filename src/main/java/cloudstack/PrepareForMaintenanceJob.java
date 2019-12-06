@@ -34,7 +34,7 @@ class PrepareForMaintenanceJob {
         }catch (JobFailedError j){
             String errorCode = j.getRoot().getElementsByTagName("errorcode").item(0).getTextContent();
 
-            if("530".equals(errorCode)) {
+            if("530".equals(errorCode) || "431".equals(errorCode)) {
                 log.warn("Host is already in maintenance mode.");
                 throw new HostIsAlreadyInMaintenanceModeException();
             }

@@ -250,8 +250,8 @@ public class CloudStack {
         migrateVMsOn(kvm);
 
         boolean wasInMaintenanceState = prepareHostForMaintenance(kvm);
-        kvm.update();
-        kvm.reboot();
+//        kvm.update();
+//        kvm.reboot();
         Common.sleep(3);
         // todo check if it was online again
         if (!wasInMaintenanceState) {
