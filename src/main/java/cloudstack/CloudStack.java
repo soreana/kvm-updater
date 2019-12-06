@@ -138,13 +138,8 @@ public class CloudStack {
         }
     }
 
-    Element apiCall(Map<String, String> command) {
-        String requestURL = generateURL(command);
-        log.debug(requestURL);
-        return requests.get(requestURL).getDocumentElement();
-    }
 
-    Job migrateVmTo(VM vm, String hostId) {
+    private Job migrateVmTo(VM vm, String hostId) {
         Map<String, String> command = new LinkedHashMap<>();
 
         if (vm.isSystemVM())
@@ -227,6 +222,12 @@ public class CloudStack {
             }
         }
         return hostWithMinimumVM;
+    }
+
+    Element apiCall(Map<String, String> command) {
+        String requestURL = generateURL(command);
+        log.debug(requestURL);
+        return requests.get(requestURL).getDocumentElement();
     }
 
     public void updateHypervisors() {
