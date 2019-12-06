@@ -1,5 +1,6 @@
 package cloudstack;
 
+import cloudstack.exception.CloudStackError;
 import com.jcabi.ssh.Shell;
 import com.jcabi.ssh.Ssh;
 import lombok.Getter;
@@ -117,7 +118,7 @@ class KVM {
         return new Shell.Plain(shell).exec("echo 'reboot'");
     }
 
-    Job prepareForMaintenance() {
+    PrepareForMaintenanceJob prepareForMaintenance() {
         Map<String, String> command = new LinkedHashMap<>();
 
         command.put("command", "prepareHostForMaintenance");
@@ -129,7 +130,7 @@ class KVM {
 
         log.info(() -> "Request maintenance preparation for hypervisor: " + id + " jobid is: " + jobId);
 
-        return new Job(cs, jobId);
+        return new PrepareForMaintenanceJob(new Job(cs, jobId));
     }
 
     Job cancelMaintenance() {
@@ -146,14 +147,15 @@ class KVM {
 
         return new Job(cs, jobId);
     }
-}
 
-class OutputStreamWithoutClose extends BufferedOutputStream {
+    private static class OutputStreamWithoutClose extends BufferedOutputStream {
 
-    OutputStreamWithoutClose(@NotNull OutputStream out) {
-        super(out);
+        OutputStreamWithoutClose(@NotNull OutputStream out) {
+            super(out);
+        }
+
+        @Override
+        public void close(){}
     }
-
-    @Override
-    public void close(){}
 }
+

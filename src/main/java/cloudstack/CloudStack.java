@@ -1,5 +1,7 @@
 package cloudstack;
 
+import cloudstack.exception.CloudStackError;
+import cloudstack.exception.HostIsAlreadyInMaintenanceModeException;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.digest.HmacUtils;
 import org.apache.logging.log4j.LogManager;
@@ -10,7 +12,6 @@ import org.w3c.dom.NodeList;
 import utils.Common;
 
 import javax.validation.constraints.NotNull;
-import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -164,7 +165,7 @@ public class CloudStack {
         return new Job(this, jobId);
     }
 
-    private void migrateVMsOn(KVM kvm) throws JobFailedException {
+    private void migrateVMsOn(KVM kvm) {
         List<Job> jobs = new ArrayList<>();
 
         if (kvm.hasVm()) {
@@ -192,14 +193,18 @@ public class CloudStack {
         log.info("Successfully migrated vms.");
     }
 
-    private void prepareHostForMaintenance(KVM kvm) throws JobFailedException {
-        Job job = kvm.prepareForMaintenance();
-        while (!job.finished())
-            Common.sleep(1);
-        log.info(() -> "Prepared host: " + kvm.getId() + " for maintenance.");
+    private void prepareHostForMaintenance(KVM kvm) {
+        try {
+            PrepareForMaintenanceJob prepareForMaintenanceJob = kvm.prepareForMaintenance();
+            while (!prepareForMaintenanceJob.finished())
+                Common.sleep(1);
+            log.info(() -> "Prepared host: " + kvm.getId() + " for maintenance.");
+        } catch (HostIsAlreadyInMaintenanceModeException e) {
+            log.warn("Host " + kvm.getId() + " is already in maintenance mode.");
+        }
     }
 
-    private void cancelHostMaintenance(KVM kvm) throws JobFailedException {
+    private void cancelHostMaintenance(KVM kvm) {
         Job job = kvm.cancelMaintenance();
         while (!job.finished())
             Common.sleep(1);
@@ -224,7 +229,7 @@ public class CloudStack {
         return hostWithMinimumVM;
     }
 
-    public void updateHypervisors() throws JobFailedException {
+    public void updateHypervisors() {
         KVM current = getKVMWithMinimumVMs();
         updateHypervisor(current);
 
@@ -233,7 +238,7 @@ public class CloudStack {
     }
 
     @NotNull
-    private void updateHypervisor(KVM kvm) throws JobFailedException {
+    private void updateHypervisor(KVM kvm) {
         if (updatedHypervisorsID.contains(kvm.getId()))
             return;
 
