@@ -245,7 +245,7 @@ public class CloudStack {
         migrateVMsOn(kvm);
 
         prepareHostForMaintenance(kvm);
-        kvm.update();
+//        kvm.update();
 //            kvm.reboot();
         cancelHostMaintenance(kvm);
         updatedHypervisorsID.add(kvm.getId());

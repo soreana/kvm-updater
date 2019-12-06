@@ -18,4 +18,9 @@ public class JobFailedError extends Error {
         super(message);
         this.root = root;
     }
+
+    public JobFailedError(JobFailedError j) {
+        super(j);
+        this.root = j.root;
+    }
 }
