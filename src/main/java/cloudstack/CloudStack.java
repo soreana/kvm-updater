@@ -251,8 +251,10 @@ public class CloudStack {
 
         boolean wasInMaintenanceState = prepareHostForMaintenance(kvm);
         kvm.update();
-//            kvm.reboot();
-        if(! wasInMaintenanceState) {
+        kvm.reboot();
+        Common.sleep(3);
+        // todo check if it was online again
+        if (!wasInMaintenanceState) {
             cancelHostMaintenance(kvm);
             updatedHypervisorsID.add(kvm.getId());
         }

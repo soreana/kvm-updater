@@ -26,6 +26,7 @@ import java.util.Map;
 @ToString
 class KVM {
     private static final int UPDATE_TRIAL_COUNT = 5;
+    private static final int RESTART_TRIAL_COUNT = 5;
     @Getter
     private final String id;
     private final InetAddress ip;
@@ -91,7 +92,7 @@ class KVM {
         return getVmsOnHypervisor("listVirtualMachines", "virtualmachine");
     }
 
-    int update(){
+    void update(){
         int result = 1;
         IOException exception = null;
 
@@ -103,7 +104,7 @@ class KVM {
                 exception = e;
             }
             if(result == 0)
-                return 0;
+                return;
         }
 
         if(exception != null) {
@@ -115,8 +116,28 @@ class KVM {
         throw new CloudStackError("Couldn't update host: " + id + " after " + UPDATE_TRIAL_COUNT + " trial." );
     }
 
-    String reboot() throws IOException {
-        return new Shell.Plain(shell).exec("echo 'reboot'");
+    void reboot() {
+        int result = 1;
+        IOException exception = null;
+
+        for (int i = 0; i < RESTART_TRIAL_COUNT ; i++) {
+            try {
+                result = new Shell.Safe(shell).exec("reboot now", System.in,
+                        new OutputStreamWithoutClose(System.out), System.err);
+            } catch (IOException e) {
+                exception = e;
+            }
+            if(result == 0)
+                return;
+        }
+
+        if(exception != null) {
+            log.error("Can't restart host " + name + " because: " + exception.getMessage());
+            throw new CloudStackError("Couldn't update host: " + id + " after " + RESTART_TRIAL_COUNT + " trial.", exception);
+        }
+
+        log.error(() -> "Can't update host " + name);
+        throw new CloudStackError("Couldn't update host: " + id + " after " + RESTART_TRIAL_COUNT + " trial." );
     }
 
     PrepareForMaintenanceJob prepareForMaintenance() {
