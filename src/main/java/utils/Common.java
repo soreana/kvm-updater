@@ -1,6 +1,8 @@
 package utils;
 
 import com.beust.jcommander.JCommander;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.w3c.dom.Element;
 
 import java.io.*;
@@ -10,6 +12,7 @@ import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 public interface Common {
+    Logger log = LogManager.getLogger(MainArgs.class);
 
     static String readPrivateKey(String privateKeyPath) throws IOException {
         File file = new File(privateKeyPath);
@@ -50,12 +53,12 @@ public interface Common {
         Properties pro = new Properties();
 
         try {
-//            log.info(() -> String.format("Read program properties from %s.", configPath));
+            log.info(() -> String.format("Read program properties from %s.", configPath));
             pro.load(new FileInputStream(configPath));
         } catch (FileNotFoundException e) {
-//            log.warn(() -> configPath + " file missed, continued with default properties.");
+            log.warn(() -> configPath + " file missed, continued with default properties.");
         } catch (IOException e) {
-//            log.error(() -> "Can't read " + configPath);
+            log.error(() -> "Can't read " + configPath);
             throw new RuntimeException(e);
         }
 
