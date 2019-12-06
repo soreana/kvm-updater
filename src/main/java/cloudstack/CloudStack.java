@@ -44,7 +44,6 @@ public class CloudStack {
         this.apiKey = apiKey;
         this.privateKey = privateKey;
         this.requests = new Requests();
-        initializeKVMHypervisors();
 
         log.info("successfully initialized CloudStack.");
     }
@@ -214,6 +213,7 @@ public class CloudStack {
     private KVM getKVMWithMinimumVMs() {
         Iterator<KVM> it = hypervisors.values().iterator();
         KVM hostWithMinimumVM = it.next();
+
         KVM current;
         int minVmCount = hostWithMinimumVM.getVmsOnHypervisor().size();
         int tmp;
@@ -230,6 +230,8 @@ public class CloudStack {
     }
 
     public void updateHypervisors() {
+        initializeKVMHypervisors();
+
         KVM current = getKVMWithMinimumVMs();
         updateHypervisor(current);
 

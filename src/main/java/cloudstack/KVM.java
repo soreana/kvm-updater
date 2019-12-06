@@ -32,6 +32,7 @@ class KVM {
     @Getter
     private final String name;
     private String state;
+    @Getter
     private String resourceState;
     private final CloudStack cs;
     @ToString.Exclude
