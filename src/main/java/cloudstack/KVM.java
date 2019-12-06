@@ -6,12 +6,15 @@ import lombok.Getter;
 import lombok.ToString;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import utils.Common;
 
+import java.io.BufferedOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -21,6 +24,7 @@ import java.util.Map;
 
 @ToString
 class KVM {
+    private static final int UPDATE_TRIAL_COUNT = 5;
     @Getter
     private final String id;
     private final InetAddress ip;
@@ -85,8 +89,28 @@ class KVM {
         return getVmsOnHypervisor("listVirtualMachines", "virtualmachine");
     }
 
-    String update() throws IOException {
-        return new Shell.Plain(shell).exec("apt update");
+    int update(){
+        int result = 1;
+        IOException exception = null;
+
+        for (int i = 0; i < UPDATE_TRIAL_COUNT ; i++) {
+            try {
+                result = new Shell.Safe(shell).exec("apt update", System.in,
+                        new OutputStreamWithoutClose(System.out), System.err);
+            } catch (IOException e) {
+                exception = e;
+            }
+            if(result == 0)
+                return 0;
+        }
+
+        if(exception != null) {
+            log.error("Can't update host " + name + " because: " + exception.getMessage());
+            throw new CloudStackError("Couldn't update host: " + id + " after " + UPDATE_TRIAL_COUNT + " trial.", exception);
+        }
+
+        log.error(() -> "Can't update host " + name);
+        throw new CloudStackError("Couldn't update host: " + id + " after " + UPDATE_TRIAL_COUNT + " trial." );
     }
 
     String reboot() throws IOException {
@@ -122,4 +146,14 @@ class KVM {
 
         return new Job(cs, jobId);
     }
+}
+
+class OutputStreamWithoutClose extends BufferedOutputStream {
+
+    OutputStreamWithoutClose(@NotNull OutputStream out) {
+        super(out);
+    }
+
+    @Override
+    public void close(){}
 }

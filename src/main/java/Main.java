@@ -18,5 +18,7 @@ public class Main {
         CloudStack cs = new CloudStack(mainArgs.baseURL, mainArgs.key, mainArgs.apiKey, privateKey);
 
         cs.updateHypervisors();
+
+        System.exit(0);
     }
 }

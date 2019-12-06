@@ -240,12 +240,8 @@ public class CloudStack {
         migrateVMsOn(kvm);
 
         prepareHostForMaintenance(kvm);
-        try {
-            kvm.update();
+        kvm.update();
 //            kvm.reboot();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
         cancelHostMaintenance(kvm);
         updatedHypervisorsID.add(kvm.getId());
     }
