@@ -16,7 +16,6 @@ import utils.Common;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -118,18 +117,18 @@ class KVM {
     }
 
     void reboot() {
-        int result = 1;
         IOException exception = null;
 
         for (int i = 0; i < RESTART_TRIAL_COUNT ; i++) {
             try {
-                result = new Shell.Safe(shell).exec("reboot now", System.in,
-                        new OutputStreamWithoutClose(System.out), System.err);
+                String r = new Shell.Plain(shell).exec("reboot now | echo \"done\"");
+                if (r.contains("done")) {
+                    log.info("Sent restart request.");
+                    return;
+                }
             } catch (IOException e) {
                 exception = e;
             }
-            if(result == 0)
-                return;
         }
 
         if(exception != null) {

@@ -25,7 +25,7 @@ public class StatusChecker implements Runnable{
         int trialCount = 0;
         long startTime ;
 
-        log.info("pinging: " + ip);
+        log.info("Pinging: " + ip);
 
         try {
             Process p = Runtime.getRuntime().exec(command);
@@ -42,7 +42,6 @@ public class StatusChecker implements Runnable{
                 status = Status.PINGING;
                 startTime = System.nanoTime();
                 System.out.println(s);
-                System.out.println(System.nanoTime() - startTime);
                 if(trialCount > 1 && (System.nanoTime() - startTime) > 300000)
                     break;
                 trialCount++;
@@ -50,6 +49,8 @@ public class StatusChecker implements Runnable{
 
             status = Status.ON;
             log.info("Host: " + ip + " backed online.");
+            inputStream.close();
+            p.destroy();
         } catch (Exception e) {
             e.printStackTrace();
         }

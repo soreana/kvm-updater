@@ -232,6 +232,8 @@ public class CloudStack {
         for (int trial = 0; trial < RESET_TRIAL ; trial++) {
             try {
 
+                System.out.println("Trial in CloudStack: " + trial);
+
                 StatusChecker statusChecker = new StatusChecker(kvm.getIp());
                 thread = new Thread(statusChecker);
                 thread.start();
@@ -241,7 +243,10 @@ public class CloudStack {
 
                 kvm.reboot();
 
-                thread.join(15000);
+                while (statusChecker.getStatus() == Status.PINGING)
+                    Common.sleep(1);
+
+                thread.join(5000);
 
                 switch (statusChecker.getStatus()) {
                     case ON:
