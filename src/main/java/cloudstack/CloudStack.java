@@ -247,11 +247,8 @@ public class CloudStack {
                     case ON:
                         log.info("Host: " + kvm.getId() + " backed Online.");
                         return;
-                    case TURN_OFF_PROBLEM:
-                        log.error("Host: " + kvm.getId() + " did't turned off in trial: " + trial);
-                        break;
-                    case TURN_ON_PROBLEM:
-                        log.error("Host: " + kvm.getId() + " did't turned on in trial: " + trial);
+                    case REBOOT_PROBLEM:
+                        log.error("Host: " + kvm.getId() + " did't reboot in trial: " + trial);
                         break;
                 }
             } catch (InterruptedException e) {
