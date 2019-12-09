@@ -29,7 +29,8 @@ class KVM {
     private static final int RESTART_TRIAL_COUNT = 5;
     @Getter
     private final String id;
-    private final InetAddress ip;
+    @Getter
+    private final String ip;
     @Getter
     private final String name;
     private String state;
@@ -43,7 +44,7 @@ class KVM {
 
     KVM(CloudStack cs, String id, String ip, String name, String state, String resourceState, String privateKey) throws UnknownHostException {
         this.id = id;
-        this.ip = InetAddress.getByName(ip);
+        this.ip = ip;
         this.name = name;
         this.state = state;
         this.resourceState = resourceState;
@@ -180,4 +181,3 @@ class KVM {
         public void close(){}
     }
 }
-

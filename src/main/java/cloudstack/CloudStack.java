@@ -18,11 +18,13 @@ import java.util.stream.Collectors;
 
 public class CloudStack {
 
+    private static final int RESET_TRIAL = 5;
     private final String apiKey;
     private final String baseURL;
     private final String key;
     private final Requests requests;
     private final String privateKey;
+    private Thread thread;
     private Map<String, KVM> hypervisors = new HashMap<>();
     private ArrayList<String> updatedHypervisorsID = new ArrayList<>();
 
@@ -226,6 +228,57 @@ public class CloudStack {
         return hostWithMinimumVM;
     }
 
+    private void resetKVM(KVM kvm) {
+        for (int trial = 0; trial < RESET_TRIAL ; trial++) {
+            try {
+
+                BackedOnline backedOnline = new BackedOnline(kvm.getIp());
+                thread = new Thread(backedOnline);
+                thread.start();
+
+                // wait for host ping
+                while (backedOnline.getStatus() != 1);
+
+                kvm.reboot();
+
+                thread.join(15000);
+
+                switch (backedOnline.getStatus()) {
+                    case 0:
+                        log.info("Host: " + kvm.getId() + " backed Online.");
+                        return;
+                    case -1:
+                        log.error("Host: " + kvm.getId() + " did't turned off in trial: " + trial);
+                        break;
+                    case -2:
+                        log.error("Host: " + kvm.getId() + " did't turned on in trial: " + trial);
+                        break;
+                }
+            } catch (InterruptedException e) {
+                log.error("Error in restarting host: " + kvm.getId() + " message: " + e.getMessage());
+            }
+        }
+    }
+
+    @NotNull
+    private void updateHypervisor(KVM kvm) {
+        if (updatedHypervisorsID.contains(kvm.getId()))
+            return;
+
+        migrateVMsOn(kvm);
+
+        boolean wasInMaintenanceState = prepareHostForMaintenance(kvm);
+
+        kvm.update();
+
+        resetKVM(kvm);
+
+        if (!wasInMaintenanceState) {
+            cancelHostMaintenance(kvm);
+            updatedHypervisorsID.add(kvm.getId());
+        }
+    }
+
     Element apiCall(Map<String, String> command) {
         String requestURL = generateURL(command);
         log.debug(requestURL);
@@ -240,23 +293,5 @@ public class CloudStack {
 
         for (KVM kvm : hypervisors.values())
             updateHypervisor(kvm);
-    }
-
-    @NotNull
-    private void updateHypervisor(KVM kvm) {
-        if (updatedHypervisorsID.contains(kvm.getId()))
-            return;
-
-        migrateVMsOn(kvm);
-
-        boolean wasInMaintenanceState = prepareHostForMaintenance(kvm);
-//        kvm.update();
-//        kvm.reboot();
-        Common.sleep(3);
-        // todo check if it was online again
-        if (!wasInMaintenanceState) {
-            cancelHostMaintenance(kvm);
-            updatedHypervisorsID.add(kvm.getId());
-        }
     }
 }

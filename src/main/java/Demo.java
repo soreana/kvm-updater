@@ -1,13 +1,14 @@
 import cloudstack.CloudStack;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import utils.*;
+import utils.Common;
+import utils.MainArgs;
 
 import java.io.IOException;
 
 
-public class Main {
-    private static Logger log = LogManager.getLogger(Main.class);
+public class Demo {
+    private static Logger log = LogManager.getLogger(Demo.class);
 
     public static void main(String[] args) throws IOException {
         MainArgs mainArgs = Common.processArgs(args);
