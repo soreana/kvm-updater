@@ -7,16 +7,16 @@ import org.apache.logging.log4j.Logger;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 
-public class BackedOnline implements Runnable{
+public class StatusChecker implements Runnable{
     private static Logger log = LogManager.getLogger(CloudStack.class);
 
     private String ip;
     @Getter
-    private volatile int status;
+    private volatile Status status;
     private static final int MAX_TURN_OFF_TRIAL_COUNT = 20;
     private static final int MAX_TURN_ON_TRIAL_COUNT = 20;
 
-    BackedOnline(String ip) {
+    StatusChecker(String ip) {
         this.ip = ip;
     }
 
@@ -35,11 +35,11 @@ public class BackedOnline implements Runnable{
 
             while ((s = inputStream.readLine()) != null && (!s.contains("timeout") || !s.contains("Unreachable") )){
                 if (trialCount > MAX_TURN_OFF_TRIAL_COUNT){
-                    status = -1;
+                    status = Status.TURN_OFF_PROBLEM;
                     log.error("Turn off problem.");
                     return;
                 }
-                status = 1;
+                status = Status.PINGING;
                 System.out.println(s);
                 trialCount++;
             }
@@ -47,15 +47,16 @@ public class BackedOnline implements Runnable{
             trialCount = 0;
             while ((s = inputStream.readLine()) != null && !s.contains("ttl")) {
                 if (trialCount >MAX_TURN_ON_TRIAL_COUNT){
-                    status = -2;
+                    status = Status.TURN_ON_PROBLEM;
                     log.error("Turn on problem.");
                     return;
                 }
-                status = 2;
+                status = Status.UNREACHABLE;
                 System.out.println(s);
                 trialCount++;
             }
 
+            status = Status.ON;
             log.info("Host: " + ip + " backed online.");
         } catch (Exception e) {
             e.printStackTrace();

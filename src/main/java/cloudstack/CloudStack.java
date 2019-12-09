@@ -232,25 +232,25 @@ public class CloudStack {
         for (int trial = 0; trial < RESET_TRIAL ; trial++) {
             try {
 
-                BackedOnline backedOnline = new BackedOnline(kvm.getIp());
-                thread = new Thread(backedOnline);
+                StatusChecker statusChecker = new StatusChecker(kvm.getIp());
+                thread = new Thread(statusChecker);
                 thread.start();
 
                 // wait for host ping
-                while (backedOnline.getStatus() != 1);
+                while (statusChecker.getStatus() != Status.PINGING);
 
                 kvm.reboot();
 
                 thread.join(15000);
 
-                switch (backedOnline.getStatus()) {
-                    case 0:
+                switch (statusChecker.getStatus()) {
+                    case ON:
                         log.info("Host: " + kvm.getId() + " backed Online.");
                         return;
-                    case -1:
+                    case TURN_OFF_PROBLEM:
                         log.error("Host: " + kvm.getId() + " did't turned off in trial: " + trial);
                         break;
-                    case -2:
+                    case TURN_ON_PROBLEM:
                         log.error("Host: " + kvm.getId() + " did't turned on in trial: " + trial);
                         break;
                 }
