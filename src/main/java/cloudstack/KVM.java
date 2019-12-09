@@ -99,7 +99,7 @@ class KVM {
 
         for (int i = 0; i < UPDATE_TRIAL_COUNT ; i++) {
             try {
-                result = new Shell.Safe(shell).exec("apt update", System.in,
+                result = new Shell.Safe(shell).exec("apt update && apt-get upgrade -y", System.in,
                         new OutputStreamWithoutClose(System.out), System.err);
             } catch (IOException e) {
                 exception = e;
