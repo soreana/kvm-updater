@@ -112,7 +112,7 @@ public class CloudStack {
                 if (!Common.getTextContent(vm, "resourcestate").contains("Maintenance"))
                     hostIDs.add(Common.getTextContent(vm, "id"));
                 else
-                    log.debug(()-> "host with ID: " + Common.getTextContent(vm, "id") + " is in maintenance mode.");
+                    log.debug(() -> "host with ID: " + Common.getTextContent(vm, "id") + " is in maintenance mode.");
             }
         }
 
@@ -297,6 +297,7 @@ public class CloudStack {
         updateHypervisor(current);
 
         for (KVM kvm : hypervisors.values())
-            updateHypervisor(kvm);
+            if (!current.getId().equals(kvm.getId()))
+                updateHypervisor(kvm);
     }
 }
