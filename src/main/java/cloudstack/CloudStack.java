@@ -60,6 +60,10 @@ public class CloudStack {
     }
 
     private void updateKVMHypervisorsState() {
+        updateKVMHypervisorsState(null);
+    }
+
+    private void updateKVMHypervisorsState(String hostID) {
         Map<String, String> command = new LinkedHashMap<>();
 
         command.put("command", "listHosts");
@@ -84,7 +88,10 @@ public class CloudStack {
 
                 try {
                     KVM kvm = new KVM(this, id, ip, name, state, resourceState, privateKey);
-                    log.info(() -> "Added new KVM: " + kvm);
+                    if (!hypervisors.containsKey(kvm.getId()))
+                        log.info(() -> "Added new KVM: " + kvm);
+                    else if (id.equals(hostID))
+                        log.info(() -> "Updated status of : " + kvm);
                     hypervisors.put(id, kvm);
                 } catch (UnknownHostException e) {
                     throw new CloudStackError("CloudStack can't access KVM Host at: " + ip, e);
@@ -280,7 +287,7 @@ public class CloudStack {
 
         do {
             Common.sleep(5);
-            updateKVMHypervisorsState();
+            updateKVMHypervisorsState(kvm.getId());
         } while (!hypervisors.get(kvm.getId()).getState().equals("Up"));
 
         if (!wasInMaintenanceState) {
