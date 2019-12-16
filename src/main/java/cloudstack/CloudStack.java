@@ -259,7 +259,7 @@ public class CloudStack {
                         log.error("Host: " + kvm.getId() + " did't reboot in trial: " + trial);
                         break;
                 }
-                Common.sleep(5);
+                Common.sleep(8);
             } catch (InterruptedException e) {
                 log.error("Error in restarting host: " + kvm.getId() + " message: " + e.getMessage());
             }
