@@ -278,7 +278,7 @@ public class CloudStack {
 
         resetKVM(kvm);
 
-        Common.sleep(5);
+        Common.sleep(10);
 
         if (!wasInMaintenanceState) {
             cancelHostMaintenance(kvm);
