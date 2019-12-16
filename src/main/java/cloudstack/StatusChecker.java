@@ -3,6 +3,7 @@ package cloudstack;
 import lombok.Getter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import utils.Common;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -49,6 +50,7 @@ public class StatusChecker implements Runnable{
                 lastPingTime = System.nanoTime();
             }
 
+            Common.sleep(2);
             status = Status.ON;
             log.info("Host: " + ip + " backed online.");
             inputStream.close();

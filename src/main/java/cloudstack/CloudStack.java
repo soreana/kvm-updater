@@ -251,7 +251,6 @@ public class CloudStack {
 
                 thread.join(5000);
 
-                Common.sleep(5);
                 switch (statusChecker.getStatus()) {
                     case ON:
                         log.info("Host: " + kvm.getId() + " backed Online.");
