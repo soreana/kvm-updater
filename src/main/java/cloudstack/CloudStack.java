@@ -278,6 +278,8 @@ public class CloudStack {
 
         resetKVM(kvm);
 
+        Common.sleep(5);
+
         if (!wasInMaintenanceState) {
             cancelHostMaintenance(kvm);
             updatedHypervisorsID.add(kvm.getId());
@@ -299,7 +301,6 @@ public class CloudStack {
         for (KVM kvm : hypervisors.values()) {
             if (!current.getId().equals(kvm.getId()))
                 updateHypervisor(kvm);
-            Common.sleep(5);
         }
     }
 }
