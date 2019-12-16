@@ -42,7 +42,7 @@ public class StatusChecker implements Runnable{
                 status = Status.PINGING;
                 startTime = System.nanoTime();
                 System.out.println(s);
-                if(trialCount > 1 && (System.nanoTime() - startTime) > 300000)
+                if(trialCount > 1 && (System.nanoTime() - startTime) > 200000)
                     break;
                 trialCount++;
             }
