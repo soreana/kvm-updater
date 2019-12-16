@@ -109,7 +109,10 @@ public class CloudStack {
             Node node = virtualMachines.item(i);
             if (node.getNodeType() == Node.ELEMENT_NODE) {
                 Element vm = (Element) node;
-                hostIDs.add(Common.getTextContent(vm, "id"));
+                if (!Common.getTextContent(vm, "resourcestate").contains("Maintenance"))
+                    hostIDs.add(Common.getTextContent(vm, "id"));
+                else
+                    log.debug(()-> "host with ID: " + Common.getTextContent(vm, "id") + " is in maintenance mode.");
             }
         }
 
@@ -229,7 +232,7 @@ public class CloudStack {
     }
 
     private void resetKVM(KVM kvm) {
-        for (int trial = 0; trial < RESET_TRIAL ; trial++) {
+        for (int trial = 0; trial < RESET_TRIAL; trial++) {
             try {
 
                 System.out.println("Trial in CloudStack: " + trial);
@@ -239,7 +242,7 @@ public class CloudStack {
                 thread.start();
 
                 // wait for host ping
-                while (statusChecker.getStatus() != Status.PINGING);
+                while (statusChecker.getStatus() != Status.PINGING) ;
 
                 kvm.reboot();
 
