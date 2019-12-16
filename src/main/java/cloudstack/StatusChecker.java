@@ -23,7 +23,7 @@ public class StatusChecker implements Runnable{
     public void run() {
         String command = "ping -i 1 " + ip;
         int trialCount = 0;
-        long startTime ;
+        long lastPingTime;
 
         log.info("Pinging: " + ip);
 
@@ -33,6 +33,8 @@ public class StatusChecker implements Runnable{
                     new InputStreamReader(p.getInputStream()));
             String s;
 
+            lastPingTime = System.nanoTime();
+
             while ((s = inputStream.readLine()) != null ){
                 if (trialCount > MAX_REBOOT_TRIAL_COUNT){
                     status = Status.REBOOT_PROBLEM;
@@ -40,11 +42,11 @@ public class StatusChecker implements Runnable{
                     return;
                 }
                 status = Status.PINGING;
-                startTime = System.nanoTime();
                 System.out.println(s);
-                if(trialCount > 1 && (System.nanoTime() - startTime) > 200000)
+                if(trialCount > 1 && (System.nanoTime() - lastPingTime) > 200000)
                     break;
                 trialCount++;
+                lastPingTime = System.nanoTime();
             }
 
             status = Status.ON;
