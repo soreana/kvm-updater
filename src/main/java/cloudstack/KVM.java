@@ -32,6 +32,7 @@ class KVM {
     private final String ip;
     @Getter
     private final String name;
+    @Getter
     private String state;
     @Getter
     private String resourceState;

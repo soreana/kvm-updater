@@ -59,7 +59,7 @@ public class CloudStack {
         return baseURL + Common.toParametersString(urlParameters);
     }
 
-    private void initializeKVMHypervisors() {
+    private void updateKVMHypervisorsState() {
         Map<String, String> command = new LinkedHashMap<>();
 
         command.put("command", "listHosts");
@@ -278,7 +278,10 @@ public class CloudStack {
 
         resetKVM(kvm);
 
-        Common.sleep(10);
+        do {
+            Common.sleep(5);
+            updateKVMHypervisorsState();
+        } while (!hypervisors.get(kvm.getId()).getState().equals("Up"));
 
         if (!wasInMaintenanceState) {
             cancelHostMaintenance(kvm);
@@ -293,7 +296,7 @@ public class CloudStack {
     }
 
     public void updateHypervisors() {
-        initializeKVMHypervisors();
+        updateKVMHypervisorsState();
 
         KVM current = getKVMWithMinimumVMs();
         updateHypervisor(current);
