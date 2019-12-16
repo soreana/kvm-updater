@@ -296,8 +296,10 @@ public class CloudStack {
         KVM current = getKVMWithMinimumVMs();
         updateHypervisor(current);
 
-        for (KVM kvm : hypervisors.values())
+        for (KVM kvm : hypervisors.values()) {
             if (!current.getId().equals(kvm.getId()))
                 updateHypervisor(kvm);
+            Common.sleep(5);
+        }
     }
 }
