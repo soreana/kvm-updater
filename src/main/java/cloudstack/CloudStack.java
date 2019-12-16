@@ -251,6 +251,7 @@ public class CloudStack {
 
                 thread.join(5000);
 
+                Common.sleep(2);
                 switch (statusChecker.getStatus()) {
                     case ON:
                         log.info("Host: " + kvm.getId() + " backed Online.");
@@ -259,7 +260,6 @@ public class CloudStack {
                         log.error("Host: " + kvm.getId() + " did't reboot in trial: " + trial);
                         break;
                 }
-                Common.sleep(8);
             } catch (InterruptedException e) {
                 log.error("Error in restarting host: " + kvm.getId() + " message: " + e.getMessage());
             }
